@@ -88,6 +88,11 @@
       background-color: #ffffff;
       box-shadow: 0 0 0 3px rgba(229, 147, 58, 0.15);
     }
+    input[readonly] {
+      background-color: #edf2f7;
+      color: #4a5568;
+      cursor: not-allowed;
+    }
     textarea { resize: vertical; min-height: 80px; }
 
     /* UPLOAD DE FOTOS MODERNO */
@@ -230,8 +235,8 @@
       <div class="section-title">📋 Identificação do Evento</div>
       <div class="form-grid">
         <div class="form-group">
-          <label>Nº do Laudo / Evento</label>
-          <input type="text" id="numLaudo" placeholder="Ex: AGG-2026-089" required>
+          <label>Nº do Laudo / Evento (Automático)</label>
+          <input type="text" id="numLaudo" placeholder="Preencha a placa para gerar..." readonly>
         </div>
         <div class="form-group">
           <label>Data da Vistoria</label>
@@ -243,7 +248,7 @@
         </div>
         <div class="form-group">
           <label>Local / Oficina</label>
-          <input type="text" id="localVistoria" placeholder="Ex: Oficina Central" required>
+          <input type="text" id="localVistoria" placeholder="Ex: Local da colisão / Oficina" required>
         </div>
       </div>
     </div>
@@ -253,16 +258,16 @@
       <div class="section-title">🚗 Dados do Veículo</div>
       <div class="form-grid">
         <div class="form-group">
+          <label>Placa</label>
+          <input type="text" id="placa" placeholder="Ex: ABC1D23" required style="text-transform: uppercase;" oninput="atualizarNumeroLaudo()">
+        </div>
+        <div class="form-group">
           <label>Marca</label>
           <input type="text" id="marca" placeholder="Ex: Fiat" required>
         </div>
         <div class="form-group">
           <label>Modelo</label>
           <input type="text" id="modelo" placeholder="Ex: Argo 1.0" required>
-        </div>
-        <div class="form-group">
-          <label>Placa</label>
-          <input type="text" id="placa" placeholder="Ex: ABC1D23" required style="text-transform: uppercase;">
         </div>
         <div class="form-group">
           <label>Cor</label>
@@ -293,7 +298,7 @@
       <div class="form-grid">
         <div class="form-group full-width">
           <label>Condição Geral do Veículo</label>
-          <textarea id="condicaoGeral" placeholder="Descreva o estado conservação geral do veículo..."></textarea>
+          <textarea id="condicaoGeral" placeholder="Descreva o estado de conservação geral do veículo..."></textarea>
         </div>
         <div class="form-group full-width">
           <label>Descrição Detalhada das Avarias</label>
@@ -420,6 +425,36 @@
 </div>
 
 <script>
+  // PREENCHIMENTO AUTOMÁTICO DE DATA E HORA
+  window.addEventListener('DOMContentLoaded', () => {
+    const hoje = new Date();
+    
+    // Formata Data YYYY-MM-DD
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    document.getElementById('dataVistoria').value = `${ano}-${mes}-${dia}`;
+
+    // Formata Hora HH:MM
+    const horas = String(hoje.getHours()).padStart(2, '0');
+    const minutos = String(hoje.getMinutes()).padStart(2, '0');
+    document.getElementById('horaVistoria').value = `${horas}:${minutos}`;
+
+    atualizarNumeroLaudo();
+  });
+
+  // GERA O NÚMERO DO LAUDO AUTOMATICAMENTE COM BASE NA PLACA E DATA
+  function atualizarNumeroLaudo() {
+    const placaInput = document.getElementById('placa').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const dataVal = document.getElementById('dataVistoria').value.replace(/-/g, '');
+    
+    if (placaInput.length > 0) {
+      document.getElementById('numLaudo').value = `AGG-${placaInput}-${dataVal}`;
+    } else {
+      document.getElementById('numLaudo').value = `AGG-PLACA-${dataVal}`;
+    }
+  }
+
   function substituirLogoPorTexto() {
     document.getElementById('logoWrap').innerHTML = '<span style="font-size:22px; font-weight:800; color:#e5933a; letter-spacing:1px;">AGGILY</span>';
   }
@@ -482,13 +517,17 @@
 
   function gerarPDF() {
     document.getElementById('pdf-numLaudo').innerText = document.getElementById('numLaudo').value;
-    document.getElementById('pdf-data').innerText = document.getElementById('dataVistoria').value;
+    
+    // Formata a data para exibir DD/MM/AAAA no PDF
+    const dataSplit = document.getElementById('dataVistoria').value.split('-');
+    const dataFormatada = `${dataSplit[2]}/${dataSplit[1]}/${dataSplit[0]}`;
+    document.getElementById('pdf-data').innerText = dataFormatada;
     document.getElementById('pdf-hora').innerText = document.getElementById('horaVistoria').value;
     document.getElementById('pdf-local').innerText = document.getElementById('localVistoria').value;
 
     document.getElementById('pdf-marca').innerText = document.getElementById('marca').value;
     document.getElementById('pdf-modelo').innerText = document.getElementById('modelo').value;
-    document.getElementById('pdf-placa').innerText = document.getElementById('placa').value;
+    document.getElementById('pdf-placa').innerText = document.getElementById('placa').value.toUpperCase();
     document.getElementById('pdf-cor').innerText = document.getElementById('cor').value;
     document.getElementById('pdf-ano').innerText = document.getElementById('anoModelo').value;
     document.getElementById('pdf-comb').innerText = document.getElementById('combustivel').value;
