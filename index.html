@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
+  <!-- Biblioteca para conversão direta em PDF sem cortes de imagem -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <style>
     :root {
       --primary: #1a1918;
@@ -138,130 +141,137 @@
     }
 
     /* ==========================================
-       ESTILO ULTRA MODERNO DO LAYOUT DO PDF
+       CONTAINER DO PDF (MODERNO / SEM CORTES)
     ========================================== */
-    #pdf-template { display: none; }
+    #pdf-wrapper { display: none; }
 
-    @media print {
-      body { background: white; padding: 0; margin: 0; font-family: 'Inter', sans-serif; }
-      .app-container { display: none !important; }
-      
-      #pdf-template { display: block !important; width: 100%; color: #0f172a; }
-      .pdf-page { padding: 10mm 12mm; }
-
-      /* Cabeçalho Estilo Relatório Executivo */
-      .pdf-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 3px solid #e5933a;
-        padding-bottom: 12px;
-        margin-bottom: 15px;
-      }
-      .pdf-header-left { display: flex; align-items: center; gap: 12px; }
-      .pdf-header-left img { height: 48px; object-fit: contain; }
-      .pdf-company-title { font-size: 16px; font-weight: 800; color: #1a1918; letter-spacing: -0.02em; }
-      .pdf-company-sub { font-size: 10px; color: #e5933a; font-weight: 700; text-transform: uppercase; }
-
-      .pdf-header-right { text-align: right; }
-      .pdf-badge-laudo {
-        background: #1a1918;
-        color: #fff;
-        padding: 4px 10px;
-        border-radius: 4px;
-        font-size: 10px;
-        font-weight: 700;
-        display: inline-block;
-        margin-bottom: 4px;
-      }
-      .pdf-meta-info { font-size: 9px; color: #64748b; }
-
-      /* Seções do PDF */
-      .pdf-section-header {
-        font-size: 10px;
-        font-weight: 800;
-        color: #1a1918;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        background: #f1f5f9;
-        padding: 6px 10px;
-        border-left: 4px solid #e5933a;
-        margin: 12px 0 8px 0;
-        border-radius: 0 4px 4px 0;
-      }
-
-      /* Grid de Dados do Veículo */
-      .pdf-grid-info {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 6px;
-        margin-bottom: 10px;
-      }
-      .pdf-info-box {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 6px 8px;
-      }
-      .pdf-info-box label { display: block; font-size: 7.5px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-      .pdf-info-box span { font-size: 10px; font-weight: 600; color: #0f172a; word-break: break-word; }
-
-      /* Caixa de Texto Avarias/Parecer */
-      .pdf-text-box {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 8px 10px;
-        font-size: 9.5px;
-        color: #334155;
-        min-height: 40px;
-        line-height: 1.4;
-      }
-
-      /* Mosaico de Fotos Moderno */
-      .pdf-photo-mosaic {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-top: 8px;
-      }
-      .pdf-photo-card {
-        border: 1px solid #cbd5e1;
-        border-radius: 6px;
-        overflow: hidden;
-        background: #fff;
-        text-align: center;
-      }
-      .pdf-photo-card img {
-        width: 100%;
-        height: 135px;
-        object-fit: cover;
-        display: block;
-      }
-      .pdf-photo-card .pdf-photo-tag {
-        background: #f1f5f9;
-        font-size: 8.5px;
-        font-weight: 700;
-        color: #334155;
-        padding: 4px;
-        border-top: 1px solid #e2e8f0;
-        text-transform: uppercase;
-      }
-
-      /* Rodapé e Assinatura */
-      .pdf-footer {
-        margin-top: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        page-break-inside: avoid;
-      }
-      .pdf-legal-text { font-size: 8px; color: #94a3b8; max-width: 50%; line-height: 1.3; }
-      .pdf-signature-wrap { text-align: center; width: 45%; }
-      .pdf-signature-wrap img { max-height: 40px; margin-bottom: 2px; }
-      .pdf-signature-line { border-top: 1.5px solid #0f172a; margin-top: 4px; }
-      .pdf-signature-title { font-size: 8.5px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-top: 2px; }
+    .pdf-page {
+      width: 794px; /* Largura padrão A4 em 96 DPI */
+      background: #ffffff;
+      padding: 35px 40px;
+      color: #0f172a;
+      box-sizing: border-box;
+      margin: 0 auto;
     }
+
+    /* Cabeçalho do PDF */
+    .pdf-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #e5933a;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    .pdf-header-left { display: flex; align-items: center; gap: 15px; }
+    .pdf-header-left img { height: 45px; object-fit: contain; }
+    .pdf-company-title { font-size: 18px; font-weight: 800; color: #1a1918; letter-spacing: -0.02em; }
+    .pdf-company-sub { font-size: 11px; color: #e5933a; font-weight: 700; text-transform: uppercase; }
+
+    .pdf-header-right { text-align: right; }
+    .pdf-badge-laudo {
+      background: #1a1918;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .pdf-meta-info { font-size: 10px; color: #64748b; }
+
+    /* Seções do PDF */
+    .pdf-section-header {
+      font-size: 11px;
+      font-weight: 800;
+      color: #1a1918;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: #f1f5f9;
+      padding: 6px 12px;
+      border-left: 4px solid #e5933a;
+      margin: 16px 0 10px 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Grid de Dados do Veículo */
+    .pdf-grid-info {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .pdf-info-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+    .pdf-info-box label { display: block; font-size: 8px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+    .pdf-info-box span { font-size: 11px; font-weight: 600; color: #0f172a; word-break: break-word; }
+
+    /* Caixa de Texto Avarias/Parecer */
+    .pdf-text-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 11px;
+      color: #334155;
+      min-height: 45px;
+      line-height: 1.4;
+    }
+
+    /* Mosaico de Fotos (Ajuste de enquadramento) */
+    .pdf-photo-mosaic {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .pdf-photo-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #f8fafc;
+      text-align: center;
+      height: 190px;
+      display: flex;
+      flex-direction: column;
+    }
+    .pdf-photo-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: contain; /* Evita que a foto seja cortada nas bordas */
+      background-color: #000000;
+      display: block;
+    }
+    .pdf-photo-card .pdf-photo-tag {
+      background: #f1f5f9;
+      font-size: 9px;
+      font-weight: 700;
+      color: #334155;
+      padding: 5px;
+      border-top: 1px solid #e2e8f0;
+      text-transform: uppercase;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Rodapé e Assinatura */
+    .pdf-footer {
+      margin-top: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .pdf-legal-text { font-size: 9px; color: #94a3b8; max-width: 50%; line-height: 1.3; }
+    .pdf-signature-wrap { text-align: center; width: 40%; }
+    .pdf-signature-wrap img { max-height: 45px; margin-bottom: 2px; }
+    .pdf-signature-line { border-top: 1.5px solid #0f172a; margin-top: 4px; }
+    .pdf-signature-title { font-size: 9px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-top: 3px; }
   </style>
 </head>
 <body>
@@ -280,7 +290,7 @@
   </header>
 
   <!-- FORMULÁRIO -->
-  <form id="vistoriaForm" onsubmit="event.preventDefault(); gerarPDF();">
+  <form id="vistoriaForm" onsubmit="event.preventDefault(); baixarPDF();">
     
     <div class="section-card">
       <div class="section-title">📋 Identificação do Evento</div>
@@ -402,11 +412,10 @@
   </form>
 </div>
 
-<!-- MODELO IMPRESSÃO PDF NOVO & ULTRA MODERNO -->
-<div id="pdf-template">
-  <div class="pdf-page">
+<!-- CONTAINER QUE VIRA O PDF -->
+<div id="pdf-wrapper">
+  <div class="pdf-page" id="pdf-content">
     
-    <!-- HEADER NOVO -->
     <div class="pdf-header">
       <div class="pdf-header-left">
         <img src="logo.png" id="pdfLogo" onerror="this.style.display='none'">
@@ -422,8 +431,7 @@
       </div>
     </div>
 
-    <!-- DADOS DO VEÍCULO -->
-    <div class="pdf-section-header">1. Dados de Identificação do Veículo</div>
+    <div class="pdf-section-header">1. Identificação do Veículo</div>
     <div class="pdf-grid-info">
       <div class="pdf-info-box"><label>Placa</label><span id="pdf-placa">-</span></div>
       <div class="pdf-info-box"><label>Marca</label><span id="pdf-marca">-</span></div>
@@ -435,14 +443,12 @@
       <div class="pdf-info-box"><label>Chassi</label><span id="pdf-chassi">-</span></div>
     </div>
 
-    <!-- PARECER TÉCNICO -->
-    <div class="pdf-section-header">2. Condição Geral do Veículo</div>
+    <div class="pdf-section-header">2. Condição Geral</div>
     <div id="pdf-condicao" class="pdf-text-box">-</div>
 
-    <div class="pdf-section-header">3. Relatório Detalhado de Avarias</div>
+    <div class="pdf-section-header">3. Relatório de Avarias</div>
     <div id="pdf-avarias" class="pdf-text-box">-</div>
 
-    <!-- REGISTRO FOTOGRÁFICO -->
     <div class="pdf-section-header">4. Evidências Fotográficas</div>
     <div class="pdf-photo-mosaic">
       <div class="pdf-photo-card">
@@ -463,15 +469,14 @@
       </div>
     </div>
 
-    <!-- RODAPÉ E ASSINATURA -->
     <div class="pdf-footer">
       <div class="pdf-legal-text">
-        Declaro que as informações e registros fotográficos constantes neste laudo correspondem fielmente ao estado do veículo no momento da vistoria.
+        Declaro que os registros fotográficos e as informações descritas refletem com precisão o estado do veículo vistoriado.
       </div>
       <div class="pdf-signature-wrap">
         <img id="pdf-assinatura">
         <div class="pdf-signature-line"></div>
-        <div class="pdf-signature-title">Assinatura do Vistoriador / Responsável</div>
+        <div class="pdf-signature-title">Responsável pela Vistoria</div>
       </div>
     </div>
 
@@ -562,7 +567,7 @@
   canvas.addEventListener('touchmove', desenhar);
   canvas.addEventListener('touchend', pararDesenho);
 
-  function gerarPDF() {
+  function baixarPDF() {
     document.getElementById('pdf-numLaudo').innerText = document.getElementById('numLaudo').value;
     
     const dataSplit = document.getElementById('dataVistoria').value.split('-');
@@ -590,7 +595,22 @@
 
     document.getElementById('pdf-assinatura').src = canvas.toDataURL();
 
-    setTimeout(() => { window.print(); }, 200);
+    // EXIBE TEMPORARIAMENTE O TEMPLATE PARA CAPTURA
+    const wrapper = document.getElementById('pdf-wrapper');
+    const element = document.getElementById('pdf-content');
+    wrapper.style.display = 'block';
+
+    const opt = {
+      margin:       0,
+      filename:     `LAUDO_${document.getElementById('placa').value.toUpperCase() || 'VISTORIA'}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+      wrapper.style.display = 'none';
+    });
   }
 </script>
 
