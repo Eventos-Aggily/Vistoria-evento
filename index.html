@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Laudo - Aggily</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; color: #333; }
+    .container { max-width: 800px; margin: auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2, h3 { color: #d32f2f; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px; margin-top: 25px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+    .form-group { display: flex; flex-direction: column; }
+    label { font-weight: bold; margin-bottom: 5px; font-size: 0.9em; }
+    input, select, textarea { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    textarea { resize: vertical; height: 60px; }
+    
+    .foto-box { border: 2px dashed #ccc; padding: 10px; border-radius: 6px; text-align: center; background: #fafafa; }
+    .foto-box input { display: none; }
+    .btn-foto { background: #555; color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; display: inline-block; font-size: 0.85em; margin-top: 5px; }
+    .preview-img { max-width: 100%; height: 120px; object-fit: cover; margin-top: 10px; border-radius: 4px; display: none; }
+
+    #signature-pad { border: 2px solid #aaa; border-radius: 4px; background: #fff; cursor: crosshair; touch-action: none; }
+    .btn-clear { background: #888; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-top: 5px; }
+
+    .btn-gerar { background: #d32f2f; color: white; border: none; padding: 14px 20px; font-size: 18px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 30px; }
+    .btn-gerar:hover { background: #b71c1c; }
+
+    /* LAYOUT DO LAUDO IMPRESSO / PDF */
+    #pdf-template { display: none; }
+
+    @media print {
+      body { background: white; padding: 0; margin: 0; }
+      .container { display: none !important; }
+      #pdf-template { display: block !important; width: 100%; font-size: 12px; }
+      
+      .pdf-page { padding: 10mm; font-family: Arial, sans-serif; }
+      
+      /* CABEÇALHO COM LOGO AGGILY */
+      .pdf-header-wrapper { 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        background-color: #1a1918; 
+        color: #ffffff; 
+        padding: 12px 18px; 
+        border-radius: 6px; 
+        margin-bottom: 15px; 
+      }
+      .logo-container {
+        display: flex;
+        align-items: center;
+        max-width: 200px;
+      }
+      .pdf-logo { height: 90px; width: auto; object-fit: contain; }
+      
+      .pdf-header-info { text-align: right; }
+      .pdf-header-info h1 { margin: 0; font-size: 18px; color: #e5933a; text-transform: uppercase; letter-spacing: 0.5px; }
+      .pdf-header-info h3 { margin: 3px 0; font-size: 13px; color: #ffffff; border: none; font-weight: normal; }
+      .pdf-header-info p { margin: 2px 0; font-size: 10px; color: #cccccc; }
+
+      .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+      .pdf-table td { border: 1px solid #000; padding: 6px; font-size: 11px; }
+      
+      .pdf-grid-fotos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+      .pdf-foto-card { border: 1px solid #000; text-align: center; padding: 5px; page-break-inside: avoid; }
+      .pdf-foto-card img { max-width: 100%; max-height: 160px; object-fit: contain; }
+      .pdf-foto-card span { display: block; font-weight: bold; margin-top: 4px; font-size: 10px; }
+      
+      .box-texto { border: 1px solid #000; padding: 8px; font-size: 11px; min-height: 40px; margin-bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>LAUDO DE VISTORIA FOTOGRÁFICA</h2>
+
+  <!-- 1. IDENTIFICAÇÃO DO EVENTO -->
+  <h3>Identificação do Evento</h3>
+  <div class="grid">
+    <div class="form-group">
+      <label>Nº do Laudo</label>
+      <input type="text" id="numLaudo" placeholder="Ex: AGG-21072026-001">
+    </div>
+    <div class="form-group">
+      <label>Data da Vistoria</label>
+      <input type="date" id="dataVistoria">
+    </div>
+    <div class="form-group">
+      <label>Horário</label>
+      <input type="time" id="horaVistoria">
+    </div>
+    <div class="form-group">
+      <label>Local / Oficina</label>
+      <input type="text" id="localVistoria" placeholder="Ex: Oficina Autenticar">
+    </div>
+  </div>
+
+  <!-- 2. IDENTIFICAÇÃO DO VEÍCULO -->
+  <h3>1. Identificação do Veículo</h3>
+  <div class="grid">
+    <div class="form-group">
+      <label>Marca</label>
+      <input type="text" id="marca" placeholder="Ex: FIAT">
+    </div>
+    <div class="form-group">
+      <label>Modelo</label>
+      <input type="text" id="modelo" placeholder="Ex: ARGO DRIVE 1.0">
+    </div>
+    <div class="form-group">
+      <label>Placa</label>
+      <input type="text" id="placa" placeholder="Ex: RQC3A47">
+    </div>
+    <div class="form-group">
+      <label>Cor</label>
+      <input type="text" id="cor" placeholder="Ex: BRANCA">
+    </div>
+    <div class="form-group">
+      <label>Ano/Modelo</label>
+      <input type="text" id="anoModelo" placeholder="Ex: 2023">
+    </div>
+    <div class="form-group">
+      <label>Combustível</label>
+      <input type="text" id="combustivel" placeholder="Ex: FLEX">
+    </div>
+    <div class="form-group">
+      <label>Chassi</label>
+      <input type="text" id="chassi">
+    </div>
+    <div class="form-group">
+      <label>KM</label>
+      <input type="number" id="km">
+    </div>
+  </div>
+
+  <!-- 3. CONDIÇÃO GERAL E AVARIAS -->
+  <h3>2. Condição Geral & Avarias</h3>
+  <div class="form-group" style="margin-bottom: 15px;">
+    <label>Condição Geral do Veículo</label>
+    <textarea id="condicaoGeral" placeholder="Descreva a condição geral..."></textarea>
+  </div>
+  <div class="form-group">
+    <label>Descrição Técnica das Avarias</label>
+    <textarea id="descricaoAvarias" placeholder="Liste as avarias encontradas..."></textarea>
+  </div>
+
+  <!-- 4. REGISTRO FOTOGRÁFICO -->
+  <h3>3. Registro Fotográfico</h3>
+  <div class="grid">
+    <div class="foto-box">
+      <label>Vista Frontal / Placa</label><br>
+      <label class="btn-foto" for="imgFrontal">📷 Tirar / Anexar</label>
+      <input type="file" id="imgFrontal" accept="image/*" capture="environment" onchange="previewImagem(event, 'prevFrontal')">
+      <img id="prevFrontal" class="preview-img">
+    </div>
+    <div class="foto-box">
+      <label>Traseira / Avaria</label><br>
+      <label class="btn-foto" for="imgTraseira">📷 Tirar / Anexar</label>
+      <input type="file" id="imgTraseira" accept="image/*" capture="environment" onchange="previewImagem(event, 'prevTraseira')">
+      <img id="prevTraseira" class="preview-img">
+    </div>
+    <div class="foto-box">
+      <label>Detalhe Avaria 1</label><br>
+      <label class="btn-foto" for="imgAvaria1">📷 Tirar / Anexar</label>
+      <input type="file" id="imgAvaria1" accept="image/*" capture="environment" onchange="previewImagem(event, 'prevAvaria1')">
+      <img id="prevAvaria1" class="preview-img">
+    </div>
+    <div class="foto-box">
+      <label>Detalhe Avaria 2</label><br>
+      <label class="btn-foto" for="imgAvaria2">📷 Tirar / Anexar</label>
+      <input type="file" id="imgAvaria2" accept="image/*" capture="environment" onchange="previewImagem(event, 'prevAvaria2')">
+      <img id="prevAvaria2" class="preview-img">
+    </div>
+  </div>
+
+  <!-- 5. ASSINATURA -->
+  <h3>4. Assinatura Digital</h3>
+  <div class="form-group">
+    <label>Assinatura do Associado / Responsável</label>
+    <canvas id="signature-pad" width="400" height="120"></canvas>
+    <div>
+      <button class="btn-clear" onclick="limparAssinatura()">Limpar Assinatura</button>
+    </div>
+  </div>
+
+  <button class="btn-gerar" onclick="gerarPDF()">📄 GERAR E BAIXAR PDF</button>
+</div>
+
+<!-- LAUDO PARA IMPRESSÃO/PDF -->
+<div id="pdf-template">
+  <div class="pdf-page">
+    <div class="pdf-header-wrapper">
+      <div class="logo-container" id="logoContainer">
+        <!-- BUSCA LOGO DA PASTA -->
+        <img class="pdf-logo" src="logo.png" id="imgLogo" alt="AGGILY" onerror="substituirLogoPorTexto()">
+      </div>
+      <div class="pdf-header-info">
+        <h1>AGGILY CLUBE DE BENEFÍCIOS</h1>
+        <h3>LAUDO DE VISTORIA FOTOGRÁFICA</h3>
+        <p><b>Nº LAUDO:</b> <span id="pdf-numLaudo"></span> | <b>DATA:</b> <span id="pdf-data"></span> | <b>HORA:</b> <span id="pdf-hora"></span></p>
+        <p><b>LOCAL:</b> <span id="pdf-local"></span></p>
+      </div>
+    </div>
+
+    <h4 style="margin: 5px 0;">1. IDENTIFICAÇÃO DO VEÍCULO</h4>
+    <table class="pdf-table">
+      <tr>
+        <td><b>MARCA:</b> <span id="pdf-marca"></span></td>
+        <td><b>MODELO:</b> <span id="pdf-modelo"></span></td>
+        <td><b>PLACA:</b> <span id="pdf-placa"></span></td>
+      </tr>
+      <tr>
+        <td><b>COR:</b> <span id="pdf-cor"></span></td>
+        <td><b>ANO/MODELO:</b> <span id="pdf-ano"></span></td>
+        <td><b>COMBUSTÍVEL:</b> <span id="pdf-comb"></span></td>
+      </tr>
+      <tr>
+        <td colspan="2"><b>CHASSI:</b> <span id="pdf-chassi"></span></td>
+        <td><b>KM:</b> <span id="pdf-km"></span></td>
+      </tr>
+    </table>
+
+    <h4 style="margin: 5px 0;">2. CONDIÇÃO GERAL DO VEÍCULO</h4>
+    <div id="pdf-condicao" class="box-texto"></div>
+
+    <h4 style="margin: 5px 0;">3. DESCRIÇÃO TÉCNICA DAS AVARIAS</h4>
+    <div id="pdf-avarias" class="box-texto"></div>
+
+    <h4 style="margin: 5px 0;">4. REGISTRO FOTOGRÁFICO</h4>
+    <div class="pdf-grid-fotos">
+      <div class="pdf-foto-card">
+        <img id="pdf-imgFrontal" src="">
+        <span>VISTA FRONTAL / PLACA</span>
+      </div>
+      <div class="pdf-foto-card">
+        <img id="pdf-imgTraseira" src="">
+        <span>TRASEIRA / AVARIA</span>
+      </div>
+      <div class="pdf-foto-card">
+        <img id="pdf-imgAvaria1" src="">
+        <span>DETALHE AVARIA 1</span>
+      </div>
+      <div class="pdf-foto-card">
+        <img id="pdf-imgAvaria2" src="">
+        <span>DETALHE AVARIA 2</span>
+      </div>
+    </div>
+
+    <h4 style="margin: 15px 0 5px 0;">5. DECLARAÇÃO E ASSINATURA</h4>
+    <p style="font-size: 10px; text-align: justify; margin: 0 0 10px 0;">
+      Declaro para os devidos fins que as informações deste laudo correspondem à vistoria realizada no veículo acima identificado, registrando fielmente a sua situação no momento da inspeção.
+    </p>
+    <div style="text-align: center; margin-top: 15px;">
+      <img id="pdf-assinatura" style="max-height: 50px; border-bottom: 1px solid #000;"><br>
+      <span style="font-size: 10px;"><b>ASSINATURA DO ASSOCIADO / VISTORIADOR</b></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function substituirLogoPorTexto() {
+    // Se a imagem logo.png não existir ou falhar, substitui por um título elegante
+    const container = document.getElementById('logoContainer');
+    container.innerHTML = '<span style="font-size:24px; font-weight:bold; color:#e5933a; letter-spacing:1px;">AGGILY</span>';
+  }
+
+  function previewImagem(event, idPreview) {
+    const input = event.target;
+    const img = document.getElementById(idPreview);
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        img.src = e.target.result;
+        img.style.display = 'block';
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  const canvas = document.getElementById('signature-pad');
+  const ctx = canvas.getContext('2d');
+  let desenhando = false;
+
+  function iniciarDesenho(e) {
+    desenhando = true;
+    ctx.beginPath();
+    const pos = obterPosicao(e);
+    ctx.moveTo(pos.x, pos.y);
+  }
+
+  function desenhar(e) {
+    if (!desenhando) return;
+    e.preventDefault();
+    const pos = obterPosicao(e);
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#000';
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  }
+
+  function pararDesenho() { desenhando = false; }
+
+  function obterPosicao(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function limparAssinatura() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  canvas.addEventListener('mousedown', iniciarDesenho);
+  canvas.addEventListener('mousemove', desenhar);
+  canvas.addEventListener('mouseup', pararDesenho);
+  canvas.addEventListener('touchstart', iniciarDesenho);
+  canvas.addEventListener('touchmove', desenhar);
+  canvas.addEventListener('touchend', pararDesenho);
+
+  function gerarPDF() {
+    // Dados do Laudo
+    document.getElementById('pdf-numLaudo').innerText = document.getElementById('numLaudo').value;
+    document.getElementById('pdf-data').innerText = document.getElementById('dataVistoria').value;
+    document.getElementById('pdf-hora').innerText = document.getElementById('horaVistoria').value;
+    document.getElementById('pdf-local').innerText = document.getElementById('localVistoria').value;
+
+    document.getElementById('pdf-marca').innerText = document.getElementById('marca').value;
+    document.getElementById('pdf-modelo').innerText = document.getElementById('modelo').value;
+    document.getElementById('pdf-placa').innerText = document.getElementById('placa').value;
+    document.getElementById('pdf-cor').innerText = document.getElementById('cor').value;
+    document.getElementById('pdf-ano').innerText = document.getElementById('anoModelo').value;
+    document.getElementById('pdf-comb').innerText = document.getElementById('combustivel').value;
+    document.getElementById('pdf-chassi').innerText = document.getElementById('chassi').value;
+    document.getElementById('pdf-km').innerText = document.getElementById('km').value;
+
+    document.getElementById('pdf-condicao').innerText = document.getElementById('condicaoGeral').value;
+    document.getElementById('pdf-avarias').innerText = document.getElementById('descricaoAvarias').value;
+
+    // Fotos
+    document.getElementById('pdf-imgFrontal').src = document.getElementById('prevFrontal').src || '';
+    document.getElementById('pdf-imgTraseira').src = document.getElementById('prevTraseira').src || '';
+    document.getElementById('pdf-imgAvaria1').src = document.getElementById('prevAvaria1').src || '';
+    document.getElementById('pdf-imgAvaria2').src = document.getElementById('prevAvaria2').src || '';
+
+    // Assinatura
+    document.getElementById('pdf-assinatura').src = canvas.toDataURL();
+
+    // Impressão
+    setTimeout(() => {
+      window.print();
+    }, 200);
+  }
+</script>
+
+</body>
+</html>
